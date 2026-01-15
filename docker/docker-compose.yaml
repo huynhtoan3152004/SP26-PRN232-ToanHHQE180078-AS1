@@ -25,7 +25,10 @@ services:
     container_name: funews-api
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
-      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=FUNewsManagementSystem;User Id=sa;Password=Zzdigimon@315;TrustServerCertificate=True;Encrypt=True;
+    expose:
+      - "8080"
     ports:
       - "5024:8080"
     depends_on:
@@ -33,6 +36,7 @@ services:
         condition: service_healthy
     networks:
       - funews-network
+      - coolify
 
 volumes:
   docker_sqlserver_data:
@@ -40,3 +44,7 @@ volumes:
 networks:
   funews-network:
     driver: bridge
+  
+  coolify:
+    external: true
+    name: coolify
