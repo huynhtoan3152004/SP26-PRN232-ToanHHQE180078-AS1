@@ -29,20 +29,12 @@ services:
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=FUNewsManagementSystem;User Id=sa;Password=Zzdigimon@315;TrustServerCertificate=True;Encrypt=True;
     expose:
       - "8080"
-    ports:
-      - "5024:8080"
     depends_on:
       sqlserver:
         condition: service_healthy
     networks:
       - funews-network
       - coolify
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.api.rule=Host(`toanhhqe180078prn232.14.225.231.92.sslip.io`)"
-      - "traefik.http.routers.api.entrypoints=websecure"
-      - "traefik.http.services.api.loadbalancer.server.port=8080"
-      - "traefik.docker.network=coolify"
 
 volumes:
   docker_sqlserver_data:
