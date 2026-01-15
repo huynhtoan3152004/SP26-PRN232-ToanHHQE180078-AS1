@@ -37,6 +37,12 @@ services:
     networks:
       - funews-network
       - coolify
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.api.rule=Host(`toanhhqe180078prn232.14.225.231.92.sslip.io`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      - "traefik.docker.network=coolify"
 
 volumes:
   docker_sqlserver_data:
