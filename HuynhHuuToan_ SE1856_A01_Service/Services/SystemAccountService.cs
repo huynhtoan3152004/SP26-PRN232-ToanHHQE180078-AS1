@@ -59,7 +59,7 @@ public class SystemAccountService : ISystemAccountService
         return new PagedResult<SystemAccountResponseDto>
         {
             Items = items,
-            PageNumber = queryParams.PageNumber,
+            Page = queryParams.PageNumber,
             PageSize = queryParams.PageSize,
             TotalItems = totalItems
         };

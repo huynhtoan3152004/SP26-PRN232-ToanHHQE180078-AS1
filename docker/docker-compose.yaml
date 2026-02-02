@@ -8,15 +8,13 @@ services:
     ports:
       - "1433:1433"
     volumes:
-      - docker_sqlserver_data:/var/opt/mssql
+      - sqlserver_data:/var/opt/mssql
       - ./init-db:/docker-entrypoint-initdb.d
     healthcheck:
       test: /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "Zzdigimon@315" -Q "SELECT 1" -C
       interval: 10s
       timeout: 5s
       retries: 10
-    networks:
-      - funews-network
 
   api:
     build:
@@ -27,28 +25,15 @@ services:
       - ASPNETCORE_ENVIRONMENT=Docker
       - ASPNETCORE_URLS=http://+:8080
       - ConnectionStrings__DefaultConnection=Server=sqlserver,1433;Database=FUNewsManagementSystem;User Id=sa;Password=Zzdigimon@315;TrustServerCertificate=True;Encrypt=True;
-    expose:
-      - "8080"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=coolify"
-      - "traefik.http.routers.funews.rule=Host(`toanhhqe180078prn232.14.225.231.92.sslip.io`)"
-      - "traefik.http.routers.funews.entrypoints=http"
-      - "traefik.http.services.funews.loadbalancer.server.port=8080"
+      - JwtSettings__SecretKey=FUNewsManagementSecretKey2026PRN232Assignment01VeryLongSecureKey
+      - JwtSettings__Issuer=FUNewsManagement
+      - JwtSettings__Audience=FUNewsManagementClient
+      - JwtSettings__ExpiryMinutes=60
+    ports:
+      - "8080:8080"
     depends_on:
       sqlserver:
         condition: service_healthy
-    networks:
-      - funews-network
-      - coolify
 
 volumes:
-  docker_sqlserver_data:
-
-networks:
-  funews-network:
-    driver: bridge
-  
-  coolify:
-    external: true
-    name: coolify
+  sqlserver_data:

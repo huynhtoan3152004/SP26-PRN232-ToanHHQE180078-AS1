@@ -1,0 +1,208 @@
+{
+  "testData": {
+    "rootCategories": [
+      {
+        "categoryName": "Technology",
+        "categoryDescription": "All about technology, innovations, and digital transformation",
+        "parentCategoryID": null,
+        "isActive": true
+      },
+      {
+        "categoryName": "Business",
+        "categoryDescription": "Business news, finance, startups, and economic trends",
+        "parentCategoryID": null,
+        "isActive": true
+      },
+      {
+        "categoryName": "Sports",
+        "categoryDescription": "Sports news, updates, and events from around the world",
+        "parentCategoryID": null,
+        "isActive": true
+      },
+      {
+        "categoryName": "Entertainment",
+        "categoryDescription": "Movies, music, celebrities, and pop culture",
+        "parentCategoryID": null,
+        "isActive": true
+      },
+      {
+        "categoryName": "Health",
+        "categoryDescription": "Health tips, medical news, and wellness advice",
+        "parentCategoryID": null,
+        "isActive": true
+      }
+    ],
+    "techSubcategories": [
+      {
+        "categoryName": "Artificial Intelligence",
+        "categoryDescription": "AI, Machine Learning, Deep Learning, and Neural Networks",
+        "parentCategoryID": 1,
+        "isActive": true
+      },
+      {
+        "categoryName": "Web Development",
+        "categoryDescription": "Frontend, Backend, Full-stack development technologies",
+        "parentCategoryID": 1,
+        "isActive": true
+      },
+      {
+        "categoryName": "Mobile Apps",
+        "categoryDescription": "iOS, Android, and cross-platform mobile development",
+        "parentCategoryID": 1,
+        "isActive": true
+      },
+      {
+        "categoryName": "Cybersecurity",
+        "categoryDescription": "Security best practices, threats, and data protection",
+        "parentCategoryID": 1,
+        "isActive": true
+      },
+      {
+        "categoryName": "Cloud Computing",
+        "categoryDescription": "AWS, Azure, GCP, and cloud infrastructure",
+        "parentCategoryID": 1,
+        "isActive": true
+      },
+      {
+        "categoryName": "DevOps",
+        "categoryDescription": "CI/CD, Docker, Kubernetes, automation tools",
+        "parentCategoryID": 1,
+        "isActive": true
+      }
+    ],
+    "businessSubcategories": [
+      {
+        "categoryName": "Startups",
+        "categoryDescription": "Startup ecosystem, funding rounds, and venture capital",
+        "parentCategoryID": 2,
+        "isActive": true
+      },
+      {
+        "categoryName": "Stock Market",
+        "categoryDescription": "Stock trading, investing strategies, and market analysis",
+        "parentCategoryID": 2,
+        "isActive": true
+      },
+      {
+        "categoryName": "Cryptocurrency",
+        "categoryDescription": "Bitcoin, Ethereum, blockchain, and crypto trading",
+        "parentCategoryID": 2,
+        "isActive": true
+      },
+      {
+        "categoryName": "E-commerce",
+        "categoryDescription": "Online retail, marketplaces, and shopping trends",
+        "parentCategoryID": 2,
+        "isActive": true
+      }
+    ],
+    "sportsSubcategories": [
+      {
+        "categoryName": "Football",
+        "categoryDescription": "Soccer news, leagues, and international tournaments",
+        "parentCategoryID": 3,
+        "isActive": true
+      },
+      {
+        "categoryName": "Basketball",
+        "categoryDescription": "NBA, international basketball, and college hoops",
+        "parentCategoryID": 3,
+        "isActive": true
+      },
+      {
+        "categoryName": "Tennis",
+        "categoryDescription": "Grand Slam tournaments, ATP, and WTA tours",
+        "parentCategoryID": 3,
+        "isActive": true
+      }
+    ],
+    "level3Categories": [
+      {
+        "categoryName": "Natural Language Processing",
+        "categoryDescription": "NLP, chatbots, language models, and text analysis",
+        "parentCategoryID": 6,
+        "isActive": true
+      },
+      {
+        "categoryName": "Computer Vision",
+        "categoryDescription": "Image recognition, object detection, and visual AI",
+        "parentCategoryID": 6,
+        "isActive": true
+      },
+      {
+        "categoryName": "Robotics",
+        "categoryDescription": "AI-powered robots, automation, and intelligent systems",
+        "parentCategoryID": 6,
+        "isActive": true
+      }
+    ],
+    "inactiveCategories": [
+      {
+        "categoryName": "Archived Tech",
+        "categoryDescription": "Old technology news - archived",
+        "parentCategoryID": 1,
+        "isActive": false
+      },
+      {
+        "categoryName": "Deprecated Category",
+        "categoryDescription": "This category is no longer active",
+        "parentCategoryID": null,
+        "isActive": false
+      }
+    ]
+  },
+  "updateExamples": [
+    {
+      "categoryID": 1,
+      "categoryName": "Technology & Innovation",
+      "categoryDescription": "Updated description for technology",
+      "parentCategoryID": null,
+      "isActive": true
+    },
+    {
+      "categoryID": 6,
+      "categoryName": "AI & Machine Learning",
+      "categoryDescription": "Renamed AI category",
+      "parentCategoryID": 1,
+      "isActive": true
+    }
+  ],
+  "edgeCases": [
+    {
+      "description": "Empty name - should fail validation",
+      "data": {
+        "categoryName": "",
+        "categoryDescription": "Test",
+        "parentCategoryID": null,
+        "isActive": true
+      }
+    },
+    {
+      "description": "Very long name",
+      "data": {
+        "categoryName": "This is a very long category name that might exceed the maximum length allowed by the database schema and should be tested",
+        "categoryDescription": "Test long name",
+        "parentCategoryID": null,
+        "isActive": true
+      }
+    },
+    {
+      "description": "Null description - should be allowed",
+      "data": {
+        "categoryName": "Minimal Category",
+        "categoryDescription": null,
+        "parentCategoryID": null,
+        "isActive": true
+      }
+    },
+    {
+      "description": "Invalid parent ID - should fail",
+      "data": {
+        "categoryName": "Orphan Category",
+        "categoryDescription": "Test",
+        "parentCategoryID": 99999,
+        "isActive": true
+      }
+    }
+  ]
+}

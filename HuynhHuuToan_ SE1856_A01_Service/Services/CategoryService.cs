@@ -28,6 +28,26 @@ public class CategoryService : ICategoryService
         // Bước 1: Lấy IQueryable từ Repository
         var query = _unitOfWork.Categories.Query(asNoTracking: true);
 
+        // 🆕 EXPAND: Eager loading dựa trên queryParams.Expand
+        var expands = queryParams.GetExpands();
+        foreach (var expand in expands)
+        {
+            switch (expand.ToLower())
+            {
+                case "parentcategory":
+                case "parent":
+                    query = query.Include(c => c.ParentCategory);
+                    break;
+                case "children":
+                case "inverseparentcategory":
+                    query = query.Include(c => c.InverseParentCategory);
+                    break;
+                case "newsarticles":
+                    query = query.Include(c => c.NewsArticles);
+                    break;
+            }
+        }
+
         // Bước 2: Apply SEARCH (tìm kiếm theo CategoryName hoặc Description)
         if (!string.IsNullOrWhiteSpace(queryParams.SearchTerm))
         {
@@ -74,7 +94,83 @@ public class CategoryService : ICategoryService
         return new PagedResult<CategoryResponseDto>
         {
             Items = items,
-            PageNumber = queryParams.PageNumber,
+            Page = queryParams.PageNumber,
+            PageSize = queryParams.PageSize,
+            TotalItems = totalItems
+        };
+    }
+
+    /// <summary>
+    /// 🆕 Lấy danh sách Category với Fields projection (Dynamic response)
+    /// </summary>
+    public async Task<DynamicPagedResult> GetAllDynamicAsync(CategoryQueryParams queryParams)
+    {
+        // Bước 1: Lấy IQueryable từ Repository
+        var query = _unitOfWork.Categories.Query(asNoTracking: true);
+
+        // EXPAND: Eager loading
+        var expands = queryParams.GetExpands();
+        foreach (var expand in expands)
+        {
+            switch (expand.ToLower())
+            {
+                case "parentcategory":
+                case "parent":
+                    query = query.Include(c => c.ParentCategory);
+                    break;
+                case "children":
+                case "inverseparentcategory":
+                    query = query.Include(c => c.InverseParentCategory);
+                    break;
+            }
+        }
+
+        // SEARCH
+        if (!string.IsNullOrWhiteSpace(queryParams.SearchTerm))
+        {
+            var searchLower = queryParams.SearchTerm.ToLower();
+            query = query.Where(c =>
+                c.CategoryName.ToLower().Contains(searchLower) ||
+                (c.CategoryDescription != null && c.CategoryDescription.ToLower().Contains(searchLower))
+            );
+        }
+
+        // FILTER
+        if (queryParams.ParentCategoryID.HasValue)
+            query = query.Where(c => c.ParentCategoryID == queryParams.ParentCategoryID.Value);
+
+        if (queryParams.IsActive.HasValue)
+            query = query.Where(c => c.IsActive == queryParams.IsActive.Value);
+
+        // Total count
+        var totalItems = await query.CountAsync();
+
+        // SORTING
+        var sortBy = string.IsNullOrWhiteSpace(queryParams.SortBy) ? "CategoryName" : queryParams.SortBy;
+        query = query.ApplySorting(sortBy, queryParams.SortOrder);
+
+        // PAGING
+        query = query.ApplyPaging(queryParams.PageNumber, queryParams.PageSize);
+
+        // Execute query
+        var categories = await query.ToListAsync();
+        var items = categories.Select(c => new CategoryResponseDto
+        {
+            CategoryID = c.CategoryID,
+            CategoryName = c.CategoryName,
+            CategoryDescription = c.CategoryDescription,
+            ParentCategoryID = c.ParentCategoryID,
+            IsActive = c.IsActive
+        }).ToList();
+
+        // 🆕 FIELDS: Shape data theo fields được chọn
+        var fields = queryParams.GetFields();
+        var shapedData = DynamicResponseHelper.ShapeData(items, fields);
+
+        return new DynamicPagedResult
+        {
+            Items = shapedData.Cast<object>().ToList(),
+            Page = queryParams.PageNumber,
             PageSize = queryParams.PageSize,
             TotalItems = totalItems
         };

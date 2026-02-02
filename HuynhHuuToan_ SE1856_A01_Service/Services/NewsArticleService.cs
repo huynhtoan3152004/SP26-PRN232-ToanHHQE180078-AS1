@@ -95,7 +95,7 @@ public class NewsArticleService : INewsArticleService
         return new PagedResult<NewsArticleResponseDto>
         {
             Items = items,
-            PageNumber = queryParams.PageNumber,
+            Page = queryParams.PageNumber,
             PageSize = queryParams.PageSize,
             TotalItems = totalItems
         };

@@ -15,6 +15,12 @@ public interface ICategoryService
     Task<PagedResult<CategoryResponseDto>> GetAllAsync(CategoryQueryParams queryParams);
 
     /// <summary>
+    /// Lấy danh sách Category với Fields projection (Dynamic response)
+    /// Sử dụng khi client muốn chỉ định fields cần trả về
+    /// </summary>
+    Task<DynamicPagedResult> GetAllDynamicAsync(CategoryQueryParams queryParams);
+
+    /// <summary>
     /// Lấy chi tiết Category theo ID (đầy đủ thông tin: Parent, Children, NewsCount)
     /// </summary>
     Task<CategoryDetailDto?> GetByIdAsync(int id);

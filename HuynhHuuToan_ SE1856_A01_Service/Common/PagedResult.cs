@@ -1,15 +1,32 @@
 namespace HuynhHuuToan__SE1856_A01_Service.Common;
 
 /// <summary>
-/// Kết quả phân trang - trả về danh sách items kèm thông tin trang
+/// Kết quả phân trang - theo Requirement 5
+/// Response phải kèm metadata phân trang: page, pageSize, totalItems, totalPages
 /// </summary>
 public class PagedResult<T>
 {
     public List<T> Items { get; set; } = new();
-    public int PageNumber { get; set; }
+    
+    /// <summary>
+    /// Số trang hiện tại (đổi từ PageNumber theo requirement)
+    /// </summary>
+    public int Page { get; set; }
+    
     public int PageSize { get; set; }
     public int TotalItems { get; set; }
     public int TotalPages => (int)Math.Ceiling((double)TotalItems / PageSize);
-    public bool HasPrevious => PageNumber > 1;
-    public bool HasNext => PageNumber < TotalPages;
+}
+
+/// <summary>
+/// Kết quả phân trang động - cho Fields projection
+/// Items là List<object> để chứa ExpandoObject
+/// </summary>
+public class DynamicPagedResult
+{
+    public List<object> Items { get; set; } = new();
+    public int Page { get; set; }
+    public int PageSize { get; set; }
+    public int TotalItems { get; set; }
+    public int TotalPages => (int)Math.Ceiling((double)TotalItems / PageSize);
 }

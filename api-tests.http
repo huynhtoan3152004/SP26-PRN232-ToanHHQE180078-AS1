@@ -1,0 +1,301 @@
+### Test API Category Endpoints
+### Base URL
+@baseUrl = http://localhost:5024
+@contentType = application/json
+
+### ============================================
+### 1. CREATE - Root Categories
+### ============================================
+
+### 1.1 Create Technology Category
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "Technology",
+  "categoryDescription": "All about technology and innovations",
+  "parentCategoryID": null,
+  "isActive": true
+}
+
+###
+
+### 1.2 Create Business Category
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "Business",
+  "categoryDescription": "Business news and finance",
+  "parentCategoryID": null,
+  "isActive": true
+}
+
+###
+
+### 1.3 Create Sports Category
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "Sports",
+  "categoryDescription": "Sports news and updates",
+  "parentCategoryID": null,
+  "isActive": true
+}
+
+###
+
+### ============================================
+### 2. CREATE - Sub Categories (Level 2)
+### ============================================
+
+### 2.1 Create AI Category (under Technology ID=1)
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "Artificial Intelligence",
+  "categoryDescription": "AI, Machine Learning, and Deep Learning",
+  "parentCategoryID": 1,
+  "isActive": true
+}
+
+###
+
+### 2.2 Create Web Development (under Technology ID=1)
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "Web Development",
+  "categoryDescription": "Frontend and Backend technologies",
+  "parentCategoryID": 1,
+  "isActive": true
+}
+
+###
+
+### 2.3 Create Mobile Apps (under Technology ID=1)
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "Mobile Apps",
+  "categoryDescription": "iOS and Android development",
+  "parentCategoryID": 1,
+  "isActive": true
+}
+
+###
+
+### 2.4 Create Startups (under Business ID=2)
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "Startups",
+  "categoryDescription": "Startup ecosystem and funding",
+  "parentCategoryID": 2,
+  "isActive": true
+}
+
+###
+
+### 2.5 Create Football (under Sports ID=3)
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "Football",
+  "categoryDescription": "Soccer news worldwide",
+  "parentCategoryID": 3,
+  "isActive": true
+}
+
+###
+
+### ============================================
+### 3. GET - Query with Filters
+### ============================================
+
+### 3.1 Get All Active Categories
+GET {{baseUrl}}/api/Category?IsActive=true&PageSize=20
+
+###
+
+### 3.2 Get All Categories with Fields Projection
+GET {{baseUrl}}/api/Category?Fields=CategoryID,CategoryName&PageSize=50
+
+###
+
+### 3.3 Search by Term
+GET {{baseUrl}}/api/Category?SearchTerm=technology
+
+###
+
+### 3.4 Get Children of Technology (ID=1)
+GET {{baseUrl}}/api/Category?ParentCategoryID=1&SortBy=CategoryName
+
+###
+
+### 3.5 Get Root Categories Only
+GET {{baseUrl}}/api/Category?PageSize=100
+
+###
+
+### 3.6 Combine: Search + Filter + Fields
+GET {{baseUrl}}/api/Category?SearchTerm=AI&IsActive=true&Fields=CategoryID,CategoryName,ParentCategoryID
+
+###
+
+### 3.7 Sort Descending
+GET {{baseUrl}}/api/Category?SortBy=CategoryName&SortOrder=desc&PageSize=20
+
+###
+
+### 3.8 Get Inactive Categories
+GET {{baseUrl}}/api/Category?IsActive=false
+
+###
+
+### 3.9 Pagination - Page 2
+GET {{baseUrl}}/api/Category?PageNumber=2&PageSize=5
+
+###
+
+### ============================================
+### 4. GET by ID
+### ============================================
+
+### 4.1 Get Technology Category
+GET {{baseUrl}}/api/Category/1
+
+###
+
+### 4.2 Get AI Category
+GET {{baseUrl}}/api/Category/4
+
+###
+
+### 4.3 Get Non-existent Category (404)
+GET {{baseUrl}}/api/Category/9999
+
+###
+
+### ============================================
+### 5. UPDATE
+### ============================================
+
+### 5.1 Update Technology Category
+PUT {{baseUrl}}/api/Category/1
+Content-Type: {{contentType}}
+
+{
+  "categoryID": 1,
+  "categoryName": "Technology & Innovation",
+  "categoryDescription": "All about technology, innovations, and digital transformation",
+  "parentCategoryID": null,
+  "isActive": true
+}
+
+###
+
+### 5.2 Move AI to Different Parent
+PUT {{baseUrl}}/api/Category/4
+Content-Type: {{contentType}}
+
+{
+  "categoryID": 4,
+  "categoryName": "Artificial Intelligence",
+  "categoryDescription": "AI and ML technologies",
+  "parentCategoryID": 2,
+  "isActive": true
+}
+
+###
+
+### 5.3 Deactivate Category
+PUT {{baseUrl}}/api/Category/6
+Content-Type: {{contentType}}
+
+{
+  "categoryID": 6,
+  "categoryName": "Mobile Apps",
+  "categoryDescription": "iOS and Android",
+  "parentCategoryID": 1,
+  "isActive": false
+}
+
+###
+
+### ============================================
+### 6. DELETE
+### ============================================
+
+### 6.1 Delete Category
+DELETE {{baseUrl}}/api/Category/10
+
+###
+
+### 6.2 Delete Non-existent (404)
+DELETE {{baseUrl}}/api/Category/9999
+
+###
+
+### ============================================
+### 7. EDGE CASES
+### ============================================
+
+### 7.1 Create with Empty Name (Validation Error)
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "",
+  "categoryDescription": "Test",
+  "parentCategoryID": null,
+  "isActive": true
+}
+
+###
+
+### 7.2 Create with Null Description
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "Minimal Category",
+  "categoryDescription": null,
+  "parentCategoryID": null,
+  "isActive": true
+}
+
+###
+
+### 7.3 Update with ID Mismatch
+PUT {{baseUrl}}/api/Category/1
+Content-Type: {{contentType}}
+
+{
+  "categoryID": 999,
+  "categoryName": "Wrong ID",
+  "categoryDescription": "Test",
+  "parentCategoryID": null,
+  "isActive": true
+}
+
+###
+
+### 7.4 Create with Invalid Parent ID
+POST {{baseUrl}}/api/Category
+Content-Type: {{contentType}}
+
+{
+  "categoryName": "Orphan",
+  "categoryDescription": "Test",
+  "parentCategoryID": 99999,
+  "isActive": true
+}
+
+###

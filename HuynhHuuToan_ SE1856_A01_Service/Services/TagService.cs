@@ -52,7 +52,7 @@ public class TagService : ITagService
         return new PagedResult<TagResponseDto>
         {
             Items = items,
-            PageNumber = queryParams.PageNumber,
+            Page = queryParams.PageNumber,
             PageSize = queryParams.PageSize,
             TotalItems = totalItems
         };

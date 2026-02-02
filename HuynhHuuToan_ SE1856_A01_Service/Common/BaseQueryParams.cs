@@ -34,4 +34,33 @@ public class BaseQueryParams
     // --- EXPANSION (include navigation properties) ---
     // Ví dụ: expand=Parent,Children
     public string? Expand { get; set; }
+
+    // --- HELPER METHODS ---
+    /// <summary>
+    /// Parse Fields string thành List
+    /// </summary>
+    public List<string> GetFields()
+    {
+        if (string.IsNullOrWhiteSpace(Fields))
+            return new List<string>();
+
+        return Fields.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                     .Select(f => f.Trim())
+                     .Where(f => !string.IsNullOrWhiteSpace(f))
+                     .ToList();
+    }
+
+    /// <summary>
+    /// Parse Expand string thành List
+    /// </summary>
+    public List<string> GetExpands()
+    {
+        if (string.IsNullOrWhiteSpace(Expand))
+            return new List<string>();
+
+        return Expand.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                     .Select(e => e.Trim())
+                     .Where(e => !string.IsNullOrWhiteSpace(e))
+                     .ToList();
+    }
 }
