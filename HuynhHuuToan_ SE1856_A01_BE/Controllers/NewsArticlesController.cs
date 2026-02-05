@@ -42,7 +42,7 @@ public class NewsArticlesController : ControllerBase
     [HttpGet("{id}")]
     [ProducesResponseType(typeof(ApiResponse<NewsArticleDetailDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> GetNewsArticle(int id)
+    public async Task<IActionResult> GetNewsArticle(string id)
     {
         var article = await _newsArticleService.GetByIdAsync(id);
         if (article == null)
@@ -75,7 +75,7 @@ public class NewsArticlesController : ControllerBase
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> UpdateNewsArticle(int id, [FromBody] NewsArticleUpdateDto updateDto)
+    public async Task<IActionResult> UpdateNewsArticle(string id, [FromBody] NewsArticleUpdateDto updateDto)
     {
         if (id != updateDto.NewsArticleID)
             return BadRequest(ApiResponse<object>.FailResponse("ID mismatch", new List<string> { $"Route ID: {id}, Body ID: {updateDto.NewsArticleID}" }));
@@ -95,7 +95,7 @@ public class NewsArticlesController : ControllerBase
     [Authorize]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ApiResponse<object>), StatusCodes.Status404NotFound)]
-    public async Task<IActionResult> DeleteNewsArticle(int id)
+    public async Task<IActionResult> DeleteNewsArticle(string id)
     {
         var result = await _newsArticleService.DeleteAsync(id);
         if (!result)

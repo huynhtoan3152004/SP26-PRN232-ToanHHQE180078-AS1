@@ -1,0 +1,2135 @@
+{
+      "info": {
+            "_postman_id": "prn232-funews-api-tests",
+            "name": "PRN232 - FUNews API Tests",
+            "description": "Complete API Test Collection for PRN232 Assignment\n- Status code tests: 200, 201, 400, 401, 404\n- JSON Schema validation\n- Search/Sort/Paging combinations",
+            "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+      },
+      "variable": [
+            {
+                  "key": "baseUrl",
+                  "value": "http://localhost:8080",
+                  "type": "string"
+            },
+            {
+                  "key": "token",
+                  "value": "",
+                  "type": "string"
+            }
+      ],
+      "item": [
+            {
+                  "name": "Auth",
+                  "item": [
+                        {
+                              "name": "Login - Success",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "// Test 1: Check HTTP Status",
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "// Test 2: Check JSON Schema",
+                                                      "const schema = {",
+                                                      "    type: 'object',",
+                                                      "    required: ['success', 'message', 'data'],",
+                                                      "    properties: {",
+                                                      "        success: { type: 'boolean' },",
+                                                      "        message: { type: 'string' },",
+                                                      "        data: {",
+                                                      "            type: 'object',",
+                                                      "            required: ['token', 'expiresIn', 'tokenType', 'account'],",
+                                                      "            properties: {",
+                                                      "                token: { type: 'string' },",
+                                                      "                expiresIn: { type: 'number' },",
+                                                      "                tokenType: { type: 'string' },",
+                                                      "                account: { type: 'object' }",
+                                                      "            }",
+                                                      "        }",
+                                                      "    }",
+                                                      "};",
+                                                      "",
+                                                      "pm.test('Response matches JSON schema', function() {",
+                                                      "    pm.response.to.have.jsonSchema(schema);",
+                                                      "});",
+                                                      "",
+                                                      "// Test 3: Save token for other requests",
+                                                      "const response = pm.response.json();",
+                                                      "if (response.data && response.data.token) {",
+                                                      "    pm.collectionVariables.set('token', response.data.token);",
+                                                      "    pm.test('Token saved successfully', function() {",
+                                                      "        pm.expect(response.data.token).to.be.a('string');",
+                                                      "    });",
+                                                      "}"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "POST",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"email\": \"admin@funews.com\",\n    \"password\": \"admin123\"\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/auth/login",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "auth",
+                                                "login"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Login - Invalid Credentials",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 401', function() {",
+                                                      "    pm.response.to.have.status(401);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Response has error message', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.false;",
+                                                      "    pm.expect(response.message).to.include('Invalid');",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Data is null', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.be.null;",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "POST",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"email\": \"wrong@email.com\",\n    \"password\": \"wrongpassword\"\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/auth/login",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "auth",
+                                                "login"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Login - Missing Fields (Validation)",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 400', function() {",
+                                                      "    pm.response.to.have.status(400);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Response indicates validation error', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response).to.have.property('errors');",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Error mentions required fields', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    const responseText = JSON.stringify(response);",
+                                                      "    pm.expect(responseText.toLowerCase()).to.include('required');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "POST",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"email\": \"\"\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/auth/login",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "auth",
+                                                "login"
+                                          ]
+                                    }
+                              }
+                        }
+                  ]
+            },
+            {
+                  "name": "Categories - GET List",
+                  "item": [
+                        {
+                              "name": "Get All - Default Paging",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "const schema = {",
+                                                      "    type: 'object',",
+                                                      "    required: ['success', 'data'],",
+                                                      "    properties: {",
+                                                      "        success: { type: 'boolean' },",
+                                                      "        data: {",
+                                                      "            type: 'object',",
+                                                      "            required: ['items', 'page', 'pageSize', 'totalItems', 'totalPages'],",
+                                                      "            properties: {",
+                                                      "                items: { type: 'array' },",
+                                                      "                page: { type: 'number' },",
+                                                      "                pageSize: { type: 'number' },",
+                                                      "                totalItems: { type: 'number' },",
+                                                      "                totalPages: { type: 'number' }",
+                                                      "            }",
+                                                      "        }",
+                                                      "    }",
+                                                      "};",
+                                                      "",
+                                                      "pm.test('Response matches pagination schema', function() {",
+                                                      "    pm.response.to.have.jsonSchema(schema);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Default page is 1', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.page).to.equal(1);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Default pageSize is 10', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.pageSize).to.equal(10);",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Custom Page Size",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('PageSize matches request', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.pageSize).to.equal(5);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Items count <= pageSize', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.items.length).to.be.at.most(5);",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories?pageSize=5",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "pageSize",
+                                                      "value": "5"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Page 2",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Page number is 2', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.page).to.equal(2);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has pagination metadata', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.have.property('totalItems');",
+                                                      "    pm.expect(response.data).to.have.property('totalPages');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories?pageNumber=2&pageSize=3",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "pageNumber",
+                                                      "value": "2"
+                                                },
+                                                {
+                                                      "key": "pageSize",
+                                                      "value": "3"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Search by Name",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Items is an array', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.items).to.be.an('array');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories?searchTerm=tech",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "searchTerm",
+                                                      "value": "tech"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Sort by Name ASC",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Items are sorted ASC', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    const items = response.data.items;",
+                                                      "    if (items.length > 1) {",
+                                                      "        for (let i = 1; i < items.length; i++) {",
+                                                      "            pm.expect(items[i].categoryName.localeCompare(items[i-1].categoryName)).to.be.at.least(0);",
+                                                      "        }",
+                                                      "    }",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Response has success true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories?sortBy=CategoryName&sortOrder=asc",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "sortBy",
+                                                      "value": "CategoryName"
+                                                },
+                                                {
+                                                      "key": "sortOrder",
+                                                      "value": "asc"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Sort by Name DESC",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Items are sorted DESC', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    const items = response.data.items;",
+                                                      "    if (items.length > 1) {",
+                                                      "        for (let i = 1; i < items.length; i++) {",
+                                                      "            pm.expect(items[i].categoryName.localeCompare(items[i-1].categoryName)).to.be.at.most(0);",
+                                                      "        }",
+                                                      "    }",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has correct pagination format', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.have.property('page');",
+                                                      "    pm.expect(response.data).to.have.property('pageSize');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories?sortBy=CategoryName&sortOrder=desc",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "sortBy",
+                                                      "value": "CategoryName"
+                                                },
+                                                {
+                                                      "key": "sortOrder",
+                                                      "value": "desc"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Filter by IsActive",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('All items are active', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    response.data.items.forEach(item => {",
+                                                      "        pm.expect(item.isActive).to.be.true;",
+                                                      "    });",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Response format is correct', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response).to.have.property('success');",
+                                                      "    pm.expect(response).to.have.property('data');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories?isActive=true",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "isActive",
+                                                      "value": "true"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Combined Search + Sort + Paging",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('PageSize is respected', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.pageSize).to.equal(5);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Response has all pagination fields', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.have.property('page');",
+                                                      "    pm.expect(response.data).to.have.property('pageSize');",
+                                                      "    pm.expect(response.data).to.have.property('totalItems');",
+                                                      "    pm.expect(response.data).to.have.property('totalPages');",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories?searchTerm=&sortBy=CategoryName&sortOrder=asc&pageNumber=1&pageSize=5&isActive=true",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "searchTerm",
+                                                      "value": ""
+                                                },
+                                                {
+                                                      "key": "sortBy",
+                                                      "value": "CategoryName"
+                                                },
+                                                {
+                                                      "key": "sortOrder",
+                                                      "value": "asc"
+                                                },
+                                                {
+                                                      "key": "pageNumber",
+                                                      "value": "1"
+                                                },
+                                                {
+                                                      "key": "pageSize",
+                                                      "value": "5"
+                                                },
+                                                {
+                                                      "key": "isActive",
+                                                      "value": "true"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Field Selection",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has items array', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.items).to.be.an('array');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories?fields=CategoryID,CategoryName",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "fields",
+                                                      "value": "CategoryID,CategoryName"
+                                                }
+                                          ]
+                                    }
+                              }
+                        }
+                  ]
+            },
+            {
+                  "name": "Categories - GET by ID",
+                  "item": [
+                        {
+                              "name": "Get by ID - Success",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "const schema = {",
+                                                      "    type: 'object',",
+                                                      "    required: ['success', 'data'],",
+                                                      "    properties: {",
+                                                      "        success: { type: 'boolean' },",
+                                                      "        data: {",
+                                                      "            type: 'object',",
+                                                      "            required: ['categoryID', 'categoryName'],",
+                                                      "            properties: {",
+                                                      "                categoryID: { type: 'number' },",
+                                                      "                categoryName: { type: 'string' }",
+                                                      "            }",
+                                                      "        }",
+                                                      "    }",
+                                                      "};",
+                                                      "",
+                                                      "pm.test('Response matches schema', function() {",
+                                                      "    pm.response.to.have.jsonSchema(schema);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Category ID matches request', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.categoryID).to.equal(1);",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories/1",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories",
+                                                "1"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get by ID - Not Found (404)",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 404', function() {",
+                                                      "    pm.response.to.have.status(404);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is false', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.false;",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has error message', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.message).to.include('not found');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories/99999",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories",
+                                                "99999"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get by ID - Invalid ID (400)",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 400', function() {",
+                                                      "    pm.response.to.have.status(400);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Response indicates error', function() {",
+                                                      "    // Invalid ID format should return 400",
+                                                      "    pm.expect(pm.response.code).to.be.oneOf([400, 404]);",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories/invalid",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories",
+                                                "invalid"
+                                          ]
+                                    }
+                              }
+                        }
+                  ]
+            },
+            {
+                  "name": "Categories - CREATE",
+                  "item": [
+                        {
+                              "name": "Create - Success",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 201', function() {",
+                                                      "    pm.response.to.have.status(201);",
+                                                      "});",
+                                                      "",
+                                                      "const schema = {",
+                                                      "    type: 'object',",
+                                                      "    required: ['success', 'data'],",
+                                                      "    properties: {",
+                                                      "        success: { type: 'boolean' },",
+                                                      "        data: {",
+                                                      "            type: 'object',",
+                                                      "            required: ['categoryID', 'categoryName']",
+                                                      "        }",
+                                                      "    }",
+                                                      "};",
+                                                      "",
+                                                      "pm.test('Response matches schema', function() {",
+                                                      "    pm.response.to.have.jsonSchema(schema);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('CategoryID is generated', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.categoryID).to.be.a('number');",
+                                                      "    pm.collectionVariables.set('createdCategoryId', response.data.categoryID);",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "POST",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"categoryName\": \"Test Category {{$timestamp}}\",\n    \"categoryDescription\": \"Created by Postman test\",\n    \"isActive\": true\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Create - Validation Error (400)",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 400', function() {",
+                                                      "    pm.response.to.have.status(400);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has validation errors', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response).to.have.property('errors');",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Error mentions CategoryName', function() {",
+                                                      "    const responseText = JSON.stringify(pm.response.json());",
+                                                      "    pm.expect(responseText.toLowerCase()).to.include('categoryname');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "POST",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"categoryName\": \"\",\n    \"isActive\": true\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Create - Unauthorized (401)",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 401', function() {",
+                                                      "    pm.response.to.have.status(401);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Unauthorized without token', function() {",
+                                                      "    pm.expect(pm.response.code).to.equal(401);",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "POST",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"categoryName\": \"Test Without Token\",\n    \"isActive\": true\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories"
+                                          ]
+                                    }
+                              }
+                        }
+                  ]
+            },
+            {
+                  "name": "Categories - UPDATE",
+                  "item": [
+                        {
+                              "name": "Update - Success",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has success message', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.message).to.include('updated');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "PUT",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"categoryID\": 1,\n    \"categoryName\": \"Updated Category Name\",\n    \"categoryDescription\": \"Updated description\",\n    \"isActive\": true\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories/1",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories",
+                                                "1"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Update - ID Mismatch (400)",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 400', function() {",
+                                                      "    pm.response.to.have.status(400);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Error message mentions ID mismatch', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.message.toLowerCase()).to.include('mismatch');",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is false', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.false;",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "PUT",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"categoryID\": 999,\n    \"categoryName\": \"Mismatch ID Test\",\n    \"isActive\": true\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories/1",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories",
+                                                "1"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Update - Not Found (404)",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 404', function() {",
+                                                      "    pm.response.to.have.status(404);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is false', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.false;",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has not found message', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.message.toLowerCase()).to.include('not found');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "PUT",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"categoryID\": 99999,\n    \"categoryName\": \"Non-existent Category\",\n    \"isActive\": true\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories/99999",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories",
+                                                "99999"
+                                          ]
+                                    }
+                              }
+                        }
+                  ]
+            },
+            {
+                  "name": "Categories - DELETE",
+                  "item": [
+                        {
+                              "name": "Delete - Success",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has success message', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.message.toLowerCase()).to.include('deleted');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "DELETE",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories/{{createdCategoryId}}",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories",
+                                                "{{createdCategoryId}}"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Delete - Not Found (404)",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 404', function() {",
+                                                      "    pm.response.to.have.status(404);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is false', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.false;",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has not found message', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.message.toLowerCase()).to.include('not found');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "DELETE",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories/99999",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories",
+                                                "99999"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Delete - Unauthorized (401)",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 401', function() {",
+                                                      "    pm.response.to.have.status(401);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Unauthorized without token', function() {",
+                                                      "    pm.expect(pm.response.code).to.equal(401);",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "DELETE",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/categories/1",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "categories",
+                                                "1"
+                                          ]
+                                    }
+                              }
+                        }
+                  ]
+            },
+            {
+                  "name": "News Articles - GET List",
+                  "item": [
+                        {
+                              "name": "Get All - Default",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has pagination metadata', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.have.property('page');",
+                                                      "    pm.expect(response.data).to.have.property('pageSize');",
+                                                      "    pm.expect(response.data).to.have.property('totalItems');",
+                                                      "    pm.expect(response.data).to.have.property('totalPages');",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Items is array', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.items).to.be.an('array');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Filter by Category",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('All items have correct categoryID', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    response.data.items.forEach(item => {",
+                                                      "        pm.expect(item.categoryID).to.equal(1);",
+                                                      "    });",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles?categoryID=1",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "categoryID",
+                                                      "value": "1"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Filter by Status",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('All items have correct status', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    response.data.items.forEach(item => {",
+                                                      "        pm.expect(item.newsStatus).to.be.true;",
+                                                      "    });",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles?newsStatus=true",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "newsStatus",
+                                                      "value": "true"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Sort by CreatedDate DESC",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Items sorted by date DESC', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    const items = response.data.items;",
+                                                      "    if (items.length > 1) {",
+                                                      "        for (let i = 1; i < items.length; i++) {",
+                                                      "            const prev = new Date(items[i-1].createdDate);",
+                                                      "            const curr = new Date(items[i].createdDate);",
+                                                      "            pm.expect(prev >= curr).to.be.true;",
+                                                      "        }",
+                                                      "    }",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles?sortBy=CreatedDate&sortOrder=desc",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "sortBy",
+                                                      "value": "CreatedDate"
+                                                },
+                                                {
+                                                      "key": "sortOrder",
+                                                      "value": "desc"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Search",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has correct response format', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response).to.have.property('success');",
+                                                      "    pm.expect(response).to.have.property('message');",
+                                                      "    pm.expect(response).to.have.property('data');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles?searchTerm=news",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "searchTerm",
+                                                      "value": "news"
+                                                }
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get All - Combined Filters",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('PageSize is correct', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.pageSize).to.equal(5);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has all pagination fields', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.have.all.keys('items', 'page', 'pageSize', 'totalItems', 'totalPages');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles?newsStatus=true&sortBy=CreatedDate&sortOrder=desc&pageSize=5",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles"
+                                          ],
+                                          "query": [
+                                                {
+                                                      "key": "newsStatus",
+                                                      "value": "true"
+                                                },
+                                                {
+                                                      "key": "sortBy",
+                                                      "value": "CreatedDate"
+                                                },
+                                                {
+                                                      "key": "sortOrder",
+                                                      "value": "desc"
+                                                },
+                                                {
+                                                      "key": "pageSize",
+                                                      "value": "5"
+                                                }
+                                          ]
+                                    }
+                              }
+                        }
+                  ]
+            },
+            {
+                  "name": "News Articles - CRUD",
+                  "item": [
+                        {
+                              "name": "Get by ID - Success",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has detailed info', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.have.property('newsArticleID');",
+                                                      "    pm.expect(response.data).to.have.property('newsTitle');",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles/1",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles",
+                                                "1"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get by ID - Not Found",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 404', function() {",
+                                                      "    pm.response.to.have.status(404);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is false', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.false;",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles/99999",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles",
+                                                "99999"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Create - Success",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 201', function() {",
+                                                      "    pm.response.to.have.status(201);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has generated ID', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.newsArticleID).to.be.a('number');",
+                                                      "    pm.collectionVariables.set('createdArticleId', response.data.newsArticleID);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "POST",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"newsTitle\": \"Test Article {{$timestamp}}\",\n    \"headline\": \"Test Headline\",\n    \"newsContent\": \"This is test content for the article.\",\n    \"categoryID\": 1,\n    \"newsStatus\": true,\n    \"createdByID\": 1,\n    \"tagIDs\": [1, 2]\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Create - Validation Error",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 400', function() {",
+                                                      "    pm.response.to.have.status(400);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has validation errors', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response).to.have.property('errors');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "POST",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"newsTitle\": \"\",\n    \"newsContent\": \"\"\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Delete - Success",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Success is true', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.success).to.be.true;",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "DELETE",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/news-articles/{{createdArticleId}}",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "news-articles",
+                                                "{{createdArticleId}}"
+                                          ]
+                                    }
+                              }
+                        }
+                  ]
+            },
+            {
+                  "name": "Tags - CRUD",
+                  "item": [
+                        {
+                              "name": "Get All Tags",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has pagination', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.have.property('page');",
+                                                      "    pm.expect(response.data).to.have.property('totalItems');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/tags",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "tags"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get Tag by ID",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has tag details', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.have.property('tagID');",
+                                                      "    pm.expect(response.data).to.have.property('tagName');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/tags/1",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "tags",
+                                                "1"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Create Tag",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 201', function() {",
+                                                      "    pm.response.to.have.status(201);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Tag created', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data.tagID).to.be.a('number');",
+                                                      "    pm.collectionVariables.set('createdTagId', response.data.tagID);",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "POST",
+                                    "header": [
+                                          {
+                                                "key": "Content-Type",
+                                                "value": "application/json"
+                                          }
+                                    ],
+                                    "body": {
+                                          "mode": "raw",
+                                          "raw": "{\n    \"tagName\": \"Test Tag {{$timestamp}}\",\n    \"note\": \"Created by Postman\"\n}"
+                                    },
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/tags",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "tags"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Delete Tag",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "DELETE",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/tags/{{createdTagId}}",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "tags",
+                                                "{{createdTagId}}"
+                                          ]
+                                    }
+                              }
+                        }
+                  ]
+            },
+            {
+                  "name": "Accounts - CRUD",
+                  "item": [
+                        {
+                              "name": "Get All Accounts",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has pagination', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.have.property('items');",
+                                                      "    pm.expect(response.data).to.have.property('totalItems');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/accounts",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "accounts"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Get Account by ID",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 200', function() {",
+                                                      "    pm.response.to.have.status(200);",
+                                                      "});",
+                                                      "",
+                                                      "pm.test('Has account details', function() {",
+                                                      "    const response = pm.response.json();",
+                                                      "    pm.expect(response.data).to.have.property('accountID');",
+                                                      "    pm.expect(response.data).to.have.property('accountEmail');",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "auth": {
+                                          "type": "bearer",
+                                          "bearer": [
+                                                {
+                                                      "key": "token",
+                                                      "value": "{{token}}"
+                                                }
+                                          ]
+                                    },
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/accounts/1",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "accounts",
+                                                "1"
+                                          ]
+                                    }
+                              }
+                        },
+                        {
+                              "name": "Accounts - Unauthorized",
+                              "event": [
+                                    {
+                                          "listen": "test",
+                                          "script": {
+                                                "exec": [
+                                                      "pm.test('Status code is 401', function() {",
+                                                      "    pm.response.to.have.status(401);",
+                                                      "});"
+                                                ],
+                                                "type": "text/javascript"
+                                          }
+                                    }
+                              ],
+                              "request": {
+                                    "method": "GET",
+                                    "url": {
+                                          "raw": "{{baseUrl}}/api/accounts",
+                                          "host": [
+                                                "{{baseUrl}}"
+                                          ],
+                                          "path": [
+                                                "api",
+                                                "accounts"
+                                          ]
+                                    }
+                              }
+                        }
+                  ]
+            }
+      ]
+}

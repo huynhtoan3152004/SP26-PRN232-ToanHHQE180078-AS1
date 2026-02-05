@@ -38,7 +38,7 @@ public class NewsArticleCreateDto
 public class NewsArticleUpdateDto
 {
     [Required(ErrorMessage = "NewsArticleID is required")]
-    public int NewsArticleID { get; set; }
+    public string NewsArticleID { get; set; } = null!;
 
     [Required(ErrorMessage = "NewsTitle is required")]
     [StringLength(200, MinimumLength = 5, ErrorMessage = "NewsTitle must be between 5 and 200 characters")]
@@ -68,7 +68,7 @@ public class NewsArticleUpdateDto
 /// </summary>
 public class NewsArticleResponseDto
 {
-    public int NewsArticleID { get; set; }
+    public string NewsArticleID { get; set; } = null!;
     public string NewsTitle { get; set; } = null!;
     public string? Headline { get; set; }
     public DateTime CreatedDate { get; set; }
@@ -87,7 +87,7 @@ public class NewsArticleResponseDto
 /// </summary>
 public class NewsArticleDetailDto
 {
-    public int NewsArticleID { get; set; }
+    public string NewsArticleID { get; set; } = null!;
     public string NewsTitle { get; set; } = null!;
     public string? Headline { get; set; }
     public DateTime CreatedDate { get; set; }

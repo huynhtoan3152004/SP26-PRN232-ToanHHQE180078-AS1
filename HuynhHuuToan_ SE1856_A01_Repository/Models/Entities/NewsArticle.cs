@@ -5,7 +5,7 @@ namespace HuynhHuuToan__SE1856_A01_Repository.Models.Entities;
 
 public partial class NewsArticle
 {
-    public int NewsArticleID { get; set; }
+    public string NewsArticleID { get; set; } = null!;
 
     public string NewsTitle { get; set; } = null!;
 

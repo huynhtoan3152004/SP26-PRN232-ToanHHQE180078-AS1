@@ -19,19 +19,15 @@ public class NewsArticleService : INewsArticleService
 
     public async Task<PagedResult<NewsArticleResponseDto>> GetAllAsync(NewsArticleQueryParams queryParams)
     {
-        // Bắt đầu với query base
-        IQueryable<NewsArticle> query = _unitOfWork.NewsArticles.Query(asNoTracking: true);
-        
-        // Include navigation properties
-        query = query
-            .Include(n => n.Category)
-            .Include(n => n.CreatedBy);
+        // Không sử dụng Include trong query chính để tránh lỗi cast
+        // Sẽ lấy Category và CreatedBy names bằng select projection
+        var baseQuery = _unitOfWork.NewsArticles.Query(asNoTracking: true);
 
         // SEARCH
         if (!string.IsNullOrWhiteSpace(queryParams.SearchTerm))
         {
             var searchLower = queryParams.SearchTerm.ToLower();
-            query = query.Where(n =>
+            baseQuery = baseQuery.Where(n =>
                 n.NewsTitle.ToLower().Contains(searchLower) ||
                 (n.Headline != null && n.Headline.ToLower().Contains(searchLower)) ||
                 (n.NewsSource != null && n.NewsSource.ToLower().Contains(searchLower))
@@ -41,56 +37,66 @@ public class NewsArticleService : INewsArticleService
         // FILTER by Category
         if (queryParams.CategoryID.HasValue)
         {
-            query = query.Where(n => n.CategoryID == queryParams.CategoryID.Value);
+            baseQuery = baseQuery.Where(n => n.CategoryID == queryParams.CategoryID.Value);
         }
 
         // FILTER by Status
         if (queryParams.NewsStatus.HasValue)
         {
-            query = query.Where(n => n.NewsStatus == queryParams.NewsStatus.Value);
+            baseQuery = baseQuery.Where(n => n.NewsStatus == queryParams.NewsStatus.Value);
         }
 
         // FILTER by CreatedBy
         if (queryParams.CreatedByID.HasValue)
         {
-            query = query.Where(n => n.CreatedByID == queryParams.CreatedByID.Value);
+            baseQuery = baseQuery.Where(n => n.CreatedByID == queryParams.CreatedByID.Value);
         }
 
         // FILTER by Date Range
         if (queryParams.CreatedDateFrom.HasValue)
         {
-            query = query.Where(n => n.CreatedDate >= queryParams.CreatedDateFrom.Value);
+            baseQuery = baseQuery.Where(n => n.CreatedDate >= queryParams.CreatedDateFrom.Value);
         }
         if (queryParams.CreatedDateTo.HasValue)
         {
-            query = query.Where(n => n.CreatedDate <= queryParams.CreatedDateTo.Value);
+            baseQuery = baseQuery.Where(n => n.CreatedDate <= queryParams.CreatedDateTo.Value);
         }
 
-        // Count
-        var totalItems = await query.CountAsync();
+        // Count trước khi sort và paging
+        var totalItems = await baseQuery.CountAsync();
 
-        // SORT
+        // SORT - sử dụng explicit ordering
         var sortBy = string.IsNullOrWhiteSpace(queryParams.SortBy) ? "CreatedDate" : queryParams.SortBy;
-        query = query.ApplySorting(sortBy, queryParams.SortOrder);
-
-        // PAGING
-        query = query.ApplyPaging(queryParams.PageNumber, queryParams.PageSize);
-
-        var articles = await query.ToListAsync();
-        var items = articles.Select(n => new NewsArticleResponseDto
+        var isDesc = queryParams.SortOrder?.ToLower() == "desc";
+        
+        IOrderedQueryable<NewsArticle> orderedQuery = sortBy.ToLower() switch
         {
-            NewsArticleID = n.NewsArticleID,
-            NewsTitle = n.NewsTitle,
-            Headline = n.Headline,
-            CreatedDate = n.CreatedDate,
-            NewsSource = n.NewsSource,
-            CategoryID = n.CategoryID,
-            CategoryName = n.Category?.CategoryName,
-            NewsStatus = n.NewsStatus,
-            CreatedByID = n.CreatedByID,
-            CreatedByName = n.CreatedBy?.AccountName,
-            ModifiedDate = n.ModifiedDate
-        }).ToList();
+            "newstitle" => isDesc ? baseQuery.OrderByDescending(n => n.NewsTitle) : baseQuery.OrderBy(n => n.NewsTitle),
+            "createddate" => isDesc ? baseQuery.OrderByDescending(n => n.CreatedDate) : baseQuery.OrderBy(n => n.CreatedDate),
+            "modifieddate" => isDesc ? baseQuery.OrderByDescending(n => n.ModifiedDate) : baseQuery.OrderBy(n => n.ModifiedDate),
+            "categoryid" => isDesc ? baseQuery.OrderByDescending(n => n.CategoryID) : baseQuery.OrderBy(n => n.CategoryID),
+            _ => isDesc ? baseQuery.OrderByDescending(n => n.CreatedDate) : baseQuery.OrderBy(n => n.CreatedDate)
+        };
+
+        // PAGING và SELECT projection để join với Category và CreatedBy
+        var items = await orderedQuery
+            .Skip((queryParams.PageNumber - 1) * queryParams.PageSize)
+            .Take(queryParams.PageSize)
+            .Select(n => new NewsArticleResponseDto
+            {
+                NewsArticleID = n.NewsArticleID,
+                NewsTitle = n.NewsTitle,
+                Headline = n.Headline,
+                CreatedDate = n.CreatedDate,
+                NewsSource = n.NewsSource,
+                CategoryID = n.CategoryID,
+                CategoryName = n.Category.CategoryName,
+                NewsStatus = n.NewsStatus,
+                CreatedByID = n.CreatedByID,
+                CreatedByName = n.CreatedBy.AccountName,
+                ModifiedDate = n.ModifiedDate
+            })
+            .ToListAsync();
 
         return new PagedResult<NewsArticleResponseDto>
         {
@@ -104,7 +110,7 @@ public class NewsArticleService : INewsArticleService
     /// <summary>
     /// Lấy chi tiết NewsArticle - ĐẦY ĐỦ thông tin: Category, CreatedBy, UpdatedBy, Tags
     /// </summary>
-    public async Task<NewsArticleDetailDto?> GetByIdAsync(int id)
+    public async Task<NewsArticleDetailDto?> GetByIdAsync(string id)
     {
         IQueryable<NewsArticle> query = _unitOfWork.NewsArticles.Query(asNoTracking: true);
         
@@ -166,8 +172,23 @@ public class NewsArticleService : INewsArticleService
 
     public async Task<NewsArticleResponseDto> CreateAsync(NewsArticleCreateDto createDto)
     {
+        // Generate new ID (format: NEWS001, NEWS002, ...)
+        var lastArticle = await _unitOfWork.NewsArticles.Query(asNoTracking: true)
+            .OrderByDescending(n => n.NewsArticleID)
+            .FirstOrDefaultAsync();
+        
+        int nextNumber = 1;
+        if (lastArticle != null && lastArticle.NewsArticleID.StartsWith("NEWS"))
+        {
+            if (int.TryParse(lastArticle.NewsArticleID.Substring(4), out int lastNumber))
+            {
+                nextNumber = lastNumber + 1;
+            }
+        }
+        
         var article = new NewsArticle
         {
+            NewsArticleID = $"NEWS{nextNumber:D3}",
             NewsTitle = createDto.NewsTitle,
             Headline = createDto.Headline,
             NewsContent = createDto.NewsContent,
@@ -249,9 +270,10 @@ public class NewsArticleService : INewsArticleService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(string id)
     {
-        var article = await _unitOfWork.NewsArticles.FindByIdAsync(default, id);
+        var article = await _unitOfWork.NewsArticles.Query(asNoTracking: false)
+            .FirstOrDefaultAsync(n => n.NewsArticleID == id);
         if (article == null)
             return false;
 
